@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+    
+#keychords
+
+#terminals
+ctrl + alt + t ; {f,a,x,t,m,w}
+	{foot,alacritty,xterm,terminology,kitty -e tmux,wezterm}
+
+#web abd other applications
+ctrl + alt + w ; {b,f,g,t,y,v,q}
+	{brave,firefox,google-chrome-stable,thunderbird,alacritty -e yt,vlc,qbittorrent}
+	
+#editors and file managers
+ctrl + alt + e ; {v,m,p,t,r}
+	{alacritty -e vim,kitty -e micro,pluma,thunar,kitty -e ranger}    

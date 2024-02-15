@@ -1,0 +1,6 @@
+let g:netrw_dirhistmax  =10
+let g:netrw_dirhistcnt =4
+let g:netrw_dirhist_4='/home/paul/.cache/qtshadercache-x86_64-little_endian-lp64'
+let g:netrw_dirhist_3='/home/paul/.cache'
+let g:netrw_dirhist_2='/home/paul'
+let g:netrw_dirhist_1='/run/media/root'

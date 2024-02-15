@@ -1,0 +1,313 @@
+from libqtile import bar, layout, widget,qtile
+from libqtile.config import Click, Drag, Group, Key, Match, Screen, ScratchPad, DropDown
+from libqtile.lazy import lazy
+from libqtile.utils import guess_terminal
+from libqtile.command.client import Client
+
+mod = "mod4"
+alt = "mod1"
+terminal = guess_terminal()
+terminal = "alacritty"
+
+keys = [
+    # Switch between windows
+    Key([mod], "h", lazy.layout.left(), desc="Move focus to left"),
+    Key([mod], "l", lazy.layout.right(), desc="Move focus to right"),
+    Key([mod], "j", lazy.layout.down(), desc="Move focus down"),
+    Key([mod], "k", lazy.layout.up(), desc="Move focus up"),
+    Key([mod], "space", lazy.layout.next(), desc="Move window focus to other window"),
+    # Move windows between left/right columns or move up/down in current stack.
+    # Moving out of range in Columns layout will create new column.
+    Key([mod, "shift"], "h", lazy.layout.shuffle_left(), desc="Move window to the left"),
+    Key([mod, "shift"], "l", lazy.layout.shuffle_right(), desc="Move window to the right"),
+    Key([mod, "shift"], "j", lazy.layout.shuffle_down(), desc="Move window down"),
+    Key([mod, "shift"], "k", lazy.layout.shuffle_up(), desc="Move window up"),
+    # Grow windows. If current window is on the edge of screen and direction
+    # will be to screen edge - window would shrink.
+    Key([mod, "control"], "h", lazy.layout.grow_left(), desc="Grow window to the left"),
+    Key([mod, "control"], "l", lazy.layout.grow_right(), desc="Grow window to the right"),
+    Key([mod, "control"], "j", lazy.layout.grow_down(), desc="Grow window down"),
+    Key([mod, "control"], "k", lazy.layout.grow_up(), desc="Grow window up"),
+    Key([mod], "n", lazy.layout.normalize(), desc="Reset all window sizes"),
+    # Toggle between split and unsplit sides of stack.
+    # Split = all windows displayed
+    # Unsplit = 1 window displayed, like Max layout, but still with
+    # multiple stack panes
+    Key(
+        [mod, "shift"],
+        "Return",
+        lazy.layout.toggle_split(),
+        desc="Toggle between split and unsplit sides of stack",
+    ),
+    Key([mod], "Return", lazy.spawn(terminal), desc="Launch terminal"),
+    # Toggle between different layouts as defined below
+    Key([mod], "Tab", lazy.next_layout(), desc="Toggle between layouts"),
+    Key([mod], "w", lazy.window.kill(), desc="Kill focused window"),
+    Key([mod, "control"], "r", lazy.reload_config(), desc="Reload the config"),
+    Key([mod, "control"], "q", lazy.shutdown(), desc="Shutdown Qtile"),
+    Key([mod], "r", lazy.spawncmd(), desc="Spawn a command using a prompt widget"),
+	#Keys for apps
+	Key([mod, alt], "2",        lazy.spawn("alacritty")),
+    Key([mod, alt], "1",        lazy.spawn("google-chrome-stable")),
+    Key([mod, alt], "3",        lazy.spawn("thunar")),
+    Key([mod, alt], "d",        lazy.spawn("rofi -show drun -dpi 1")),
+    Key([mod, alt], "7",        lazy.spawn("vlc")),
+    Key([mod, alt], "5",        lazy.spawn("transmission-gtk")),
+    Key([mod, alt], "6",        lazy.spawn("blueman-manager")),
+    Key([mod, alt], "8",        lazy.spawn("okular")),
+#	Key([mod, alt], "9",        lazy.spawn("Zathura")),
+	Key([mod, alt], "4",        lazy.spawn("catfish")),
+
+
+# == floating and maximise
+    Key([mod], "t", lazy.window.toggle_floating()),
+    Key([mod, "shift"], "m", lazy.window.toggle_maximize()),
+
+    # == opacity control
+    Key([mod], "o", lazy.window.down_opacity()),
+    Key([mod, "shift"], "o", lazy.window.up_opacity()),
+    Key([mod, "control"], "o", lazy.window.opacity(.3)),
+    Key([mod, "shift", "control"], "o", lazy.window.opacity(1)),
+
+    # Keys for special events
+#    Key([mod], "l",            lazy.spawn("xscreensaver-command -lock")),
+#    Key([], "XF86AudioRaiseVolume",        lazy.spawn("amixer -c 0 -q set Master 2dB+")),
+#    Key([], "XF86AudioLowerVolume",        lazy.spawn("amixer -c 0 -q set Master 2dB-")),
+#    Key([], "XF86AudioMute",        lazy.spawn("amixer -c 0 -q set Master toggle")),
+
+#Increase or decrease brightness
+#	Key([], "XF86MonBrightnessUp", lazy.spawn("brightnessctl set +2%")),
+#    Key([], "XF86MonBrightnessDown", lazy.spawn("brightnessctl set 2%-")),
+
+# Increase or decrease brightness and send notification
+
+    Key([], "XF86MonBrightnessUp", lazy.spawn("/home/paul/.config/qtile/scripts/brightup.sh")),
+    Key([], "XF86MonBrightnessDown", lazy.spawn("/home/paul/.config/qtile/scripts/brightdown.sh")),
+
+
+#Incease or decrease volume
+#    Key([], "XF86AudioRaiseVolume", lazy.spawn("pactl set-sink-volume @DEFAULT_SINK@ +10%")),
+#    Key([], "XF86AudioLowerVolume", lazy.spawn("pactl set-sink-volume @DEFAULT_SINK@ -10%")),
+	Key([], "XF86AudioMute",        lazy.spawn("pactl set-source-mute @DEFAULT_SOURCE@ toggle")),
+
+#increase or decrease volume and send notification
+
+    Key([], "XF86AudioRaiseVolume",lazy.spawn("/home/paul/.config/qtile/scripts/volup.sh")),
+    Key([], "XF86AudioLowerVolume",lazy.spawn("/home/paul/.config/qtile/scripts/voldown.sh")),
+
+#Poweroff script
+    Key([mod, alt], "p", lazy.spawn("/home/paul/.config/qtile/scripts/logout.sh")),
+
+#add key command for scratchpad
+	Key([mod], "space", lazy.group["scratchpad"].dropdown_toggle("term")),
+
+]
+        
+# group_names = [("", {'layout': 'max', 'matches':[Match(wm_class=["google-chrome"])]}),
+               # ("", {'layout': 'Bsp'}),
+               # ("", {'layout': 'treetab', 'matches':[Match(wm_class=["thunar"])]}),
+               # ("", {'layout': 'treetab', 'matches':[Match(wm_class=["catfish"])]}),
+               # ("", {'layout': 'columns', 'matches':[Match(wm_class=["transmission-gtk"])]}),
+               # ("", {'layout': 'columns', 'matches':[Match(wm_class=["blueman-manager"])]}),
+               # ("", {'layout': 'floating', 'matches':[Match(wm_class=["vlc"])]}),
+               # ("", {'layout': 'columns'}),
+               # ("9", {'layout': 'columns'})]
+
+group_names = [("www", {'layout': 'max', 'matches':[Match(wm_class=["google-chrome"])]}),
+               ("alacritty", {'layout': 'Bsp'}),
+               ("thunar", {'layout': 'treetab', 'matches':[Match(wm_class=["thunar"])]}),
+               ("catfish", {'layout': 'treetab', 'matches':[Match(wm_class=["catfish"])]}),
+               ("transmission", {'layout': 'columns', 'matches':[Match(wm_class=["transmission-gtk"])]}),
+               ("bluetooth", {'layout': 'columns', 'matches':[Match(wm_class=["blueman-manager"])]}),
+               ("vlc", {'layout': 'floating', 'matches':[Match(wm_class=["vlc"])]}),
+               ("", {'layout': 'columns'}),
+               ("9", {'layout': 'columns'})]
+
+
+groups = [Group(name, **kwargs) for name, kwargs in group_names]
+
+for i, (name, kwargs) in enumerate(group_names, 1):
+    # Switch to another group
+    keys.append(Key([mod], str(i), lazy.group[name].toscreen(toggle=True)))
+    keys.append(Key([mod, "shift"], str(i), lazy.window.togroup(
+        name, switch_group=True)))  # Send current window to another group 
+
+#Append Scratchpad to Groups list
+groups.append(
+	ScratchPad("scratchpad", [
+#define a terminal
+	DropDown("term", "alacritty", opacity=0.8, height=0.5, width=0.00),
+	]),
+)
+
+layouts = [
+      layout.Bsp(border_focus_stack=["#d75f5f", "#8f3d3d"], border_width=4, margin = 8),  
+      layout.Columns(border_focus_stack=["#d75f5f", "#8f3d3d"], border_width=4, margin = 8),
+      layout.Max(),
+    # Try more layouts by unleashing below layouts.
+ 	  layout.Stack(num_stacks=2),
+      #layout.Bsp(),
+      layout.Matrix(),
+      layout.MonadTall(),
+      layout.MonadWide(),
+      layout.RatioTile(),
+      layout.Tile(),
+      layout.TreeTab(),
+      layout.VerticalTile(),
+      layout.Zoomy(),
+      layout.Floating()
+]
+
+#Use these colors in the widgets
+colors = [["#282c34", "#282c34"],
+          ["#1c1f24", "#1c1f24"],
+          ["#dfdfdf", "#dfdfdf"],
+          ["#ff6c6b", "#ff6c6b"],
+          ["#98be65", "#98be65"],
+          ["#da8548", "#da8548"],
+          ["#51afef", "#51afef"],
+          ["#c678dd", "#c678dd"],
+          ["#46d9ff", "#46d9ff"],
+		  ["#d75f5f", "#d75f5f"],	
+          ["#a9a1e1", "#a9a1e1"]]
+
+widget_defaults = dict(
+    font="sans",
+    fontsize=18,
+    padding=3,
+)
+extension_defaults = widget_defaults.copy()
+
+screens = [
+    Screen(
+        top=bar.Bar(
+            [
+#                widget.CurrentLayout(),
+
+#				widget.GroupBox(
+#                       font = "Ubuntu Bold",
+#                       fontsize = 28,
+#                       margin_y = 3,
+#                       margin_x = 0,
+#                       padding_y = 5,
+#                       padding_x = 5,
+#                       borderwidth = 0,
+#					   active = colors[6],
+#                       inactive = colors[4],
+#                       rounded = False,
+#                       highlight_color = colors[1],
+#                       highlight_method = "line",
+#                       this_current_screen_border = colors[6],
+#                       this_screen_border = colors [4],
+#                       other_current_screen_border = colors[6],
+#                       other_screen_border = colors[4],
+#                       foreground = colors[5],
+##                       background = colors[0],
+##					   background="#00000000",
+# 					   hide_unused=True,
+#                       ),
+
+                widget.GroupBox(active=colors[6], inactive=colors[4],
+                                this_screen_border='00BCD4',
+                                this_current_screen_border= "#FF0000",
+                                highlight_method='line',
+                                highlight_color=['1A2024', '060A0F'],
+								font="Ubuntu Bold",
+                                fontsize=18,
+								hide_unused=True,
+                                ),
+
+
+                widget.Prompt(),
+#                widget.WindowName(),
+                widget.Chord(
+                    chords_colors={
+                        "launch": ("#ff0000", "#ffffff"),
+                    },
+                    name_transform=lambda name: name.upper(),
+                background="#00000000"),
+#                widget.TextBox("default config", name="default"),
+#                widget.TextBox("Press &lt;M-r&gt; to spawn", foreground="#d75f5f"),
+#widget.Sep(foreground="#d75f5f"),
+widget.Spacer(10),
+widget.CurrentLayout(foreground="#d75f5f"),
+#widget.Sep(foreground="#d75f5f"),
+widget.Spacer(10),
+widget.CheckUpdates(
+                       update_interval = 1800,
+                       distro = "Arch_checkupdates",
+                       display_format = "Updates: {updates} ",
+                       foreground = "#FF0000",	
+                       colour_have_updates = "#FF0000",
+                       colour_no_updates = colors[1],
+                       mouse_callbacks = {'Button1': lambda: qtile.cmd_spawn("alacritty" + ' -e sudo pacman -Syu ')},
+                       padding = 5,
+                       background = colors[0]
+                       ),
+widget.Spacer(200),
+widget.Backlight(foreground="#d75f5f", backlight_name='intel_backlight', format ="  {percent:2.0%}"),
+widget.Spacer(10),
+widget.Volume(foreground="#d75f5f", fmt='Vol: {}'),
+#fmt= " {}"),
+widget.Spacer(50),
+#widget.ThermalSensor(tag_sensor="Core 0",foreground="#d75f5f", fmt=" {}"),
+widget.GenPollText(update_interval=5, func=lambda: subprocess.check_output("/home/paul/.config/qtile/scripts/temp").decode("utf-8").strip(), foreground="#d75f5f", fmt=" {}"),
+widget.Spacer(10),
+widget.GenPollText(update_interval=5, func=lambda: subprocess.check_output("/home/paul/.config/qtile/scripts/fan.sh").decode("utf-8").strip(), foreground="#d75f5f", fmt="{}"),
+#widget.GenPollText(update_interval=1, func=lambda: subprocess.check_output("/home/paul/.config/qtile/scripts/fan.sh").decode("utf-8"), foreground="#d75f5f"), 
+widget.Spacer(400),
+widget.Clock(foreground="#00FFFF", format="%A, %B %d, %Y %H:%M"),
+widget.Spacer(),
+widget.Battery(foreground="#d75f5f"),
+widget.Systray(),
+#widget.Sep(foreground="#0096FF"),
+#                widget.QuickExit(),
+            ],
+            24,
+            # border_width=[2, 0, 2, 0],  # Draw top and bottom borders
+            # border_color=["ff00ff", "000000", "ff00ff", "000000"]  # Borders are magenta
+        ),
+    ),  
+
+]
+
+# Drag floating layouts.
+mouse = [
+    Drag([mod], "Button1", lazy.window.set_position_floating(), start=lazy.window.get_position()),
+    Drag([mod], "Button3", lazy.window.set_size_floating(), start=lazy.window.get_size()),
+    Click([mod], "Button2", lazy.window.bring_to_front()),
+]
+
+dgroups_key_binder = None
+dgroups_app_rules = []  # type: list
+follow_mouse_focus = True
+bring_front_click = False
+cursor_warp = False
+floating_layout = layout.Floating(
+    float_rules=[
+        # Run the utility of `xprop` to see the wm class and name of an X client.
+        *layout.Floating.default_float_rules,
+        Match(wm_class="confirmreset"),  # gitk
+        Match(wm_class="makebranch"),  # gitk
+        Match(wm_class="maketag"),  # gitk
+        Match(wm_class="ssh-askpass"),  # ssh-askpass
+        Match(title="branchdialog"),  # gitk
+        Match(title="pinentry"),  # GPG key password entry
+    ]
+)
+auto_fullscreen = True
+focus_on_window_activation = "smart"
+reconfigure_screens = True
+
+import os
+import subprocess
+from libqtile import hook
+
+@hook.subscribe.startup_once
+def autostart():
+    home = os.path.expanduser('~/.config/qtile/autostart.sh')
+    subprocess.run([home])
+
+# If things like steam games want to auto-minimize themselves when losing
+# focus, should we respect this or not?
+auto_minimize = True

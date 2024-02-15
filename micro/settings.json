@@ -1,0 +1,14 @@
+{
+    "colorscheme": "simple",
+    "filemanager.openonstart": true,
+    "fzfarg": "--preview 'bat -f -p {}'",
+    "fzfcmd": "/usr/bin/fzf",
+    "fzfopen": "newtab",
+    "fzfpath": "relative",
+    "mkparents": true,
+    "pluginrepos": [
+        "https://raw.githubusercontent.com/MuratovAS/micro-fzfinder/main/repo.json"
+    ],
+    "softwrap": true,
+    "wordwrap": true
+}
