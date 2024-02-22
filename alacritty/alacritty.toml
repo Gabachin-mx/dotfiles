@@ -23,7 +23,8 @@ white = "0x1d1f21"
 yellow = "0xd6d6d6"
 
 [colors.cursor]
-cursor =  "#39FF14"
+# cursor =  "#ffffff"
+cursor =  "#FA8072"
 text = "0xffffff"
 
 [colors.normal]
@@ -41,8 +42,12 @@ foreground= "#FAF9F6"
 background = "#000000"
 
 [cursor]
-style = "Block"
-unfocused_hollow = true
+blink_interval = 550
+unfocused_hollow = false
+
+[cursor.style]
+blinking = "On"
+shape = "Block"
 
 [debug]
 log_level = "OFF"
