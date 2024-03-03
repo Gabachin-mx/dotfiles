@@ -1,7 +1,5 @@
 ;;; $DOOMDIR/config.el -*- lexical-binding: t; -*-
 
-(beacon-mode 1)
-
 ;; Place your private configuration here! Remember, you do not need to run 'doom
 ;; sync' after modifying this file!
 
@@ -36,11 +34,7 @@
 ;; There are two ways to load a theme. Both assume the theme is installed and
 ;; available. You can either set `doom-theme' or manually load a theme with the
 ;; `load-theme' function. This is the default:
-;; (setq doom-theme 'doom-gruvbox)
-;;
 (setq doom-theme 'doom-gruvbox)
-(custom-set-faces
-'(default ((t (:background "#1a1a1a" :foreground "#a9b1d6")))))
 
 (custom-set-faces!
   '(font-lock-comment-face :slant italic)
@@ -58,8 +52,8 @@
                 (string-match-p (regexp-quote "unknown") battery-str)
                 (string-match-p (regexp-quote "N/A") battery-str))
       (display-battery-mode 1))))
-(display-time-mode 1) ; show time and date
-(setq display-time-format "%Y-%m-%d %H:%M") ; time and date format
+
+(setq display-time-format "%I:%M")
 
 ;; Display mode with letter instead of icon
 (setq doom-modeline-modal-icon nil)
@@ -73,8 +67,8 @@
 (setq org-directory "~/org/")
 
 ;; force doom to open at dashboard
-;; (setq doom-fallback-buffer-name "*dashboard*")
-;; (setq fancy-splash-image (concat doom-user-dir "splash.png"))
+;;(setq doom-fallback-buffer-name "*dashboard*")
+(setq fancy-splash-image (concat doom-user-dir "splash.png"))
 
 ;; backup files
 (setq auto-save-default t
@@ -350,7 +344,7 @@ _h_ decrease width    _l_ increase width
   ("q" nil))
 
 (map!
-    (:prefix "r"
+    (:prefix "w"
       :desc "Hydra resize" :n "SPC" #'doom-window-resize-hydra/body))
 ;;----------------------------------------------------------------------------------------------------
 ;;default to splitting to the right or to the bottom of the frame. Also, ask me what buffer to use in the newly created window.
@@ -390,20 +384,3 @@ _h_ decrease width    _l_ increase width
   (setq evil-insert-state-cursor   '("#eb998b" (bar . 2)))
   (setq evil-replace-state-cursor  '("#eb998b" hbar))
   (setq evil-motion-state-cursor   '("#ad8beb" box))
-
-;; Change cursor style
-(add-to-list 'default-frame-alist '(cursor-type . bar))
-;; vertical border
-(let ((display-table (or standard-display-table (make-display-table))))
-  (set-display-table-slot display-table 'vertical-border (make-glyph-code ?│)) ; or ┃ │
-  (setq standard-display-table display-table))
-(set-face-background 'vertical-border "#0e0f1b")
-(set-face-foreground 'vertical-border (face-background 'vertical-border))
-
-(setq delete-by-moving-to-trash t
-      trash-directory "~/.local/share/Trash/files/")
-
-
-(map! :leader
-      :desc "Zap to char"    "z" #'zap-to-char
-      :desc "Zap up to char" "Z" #'zap-up-to-char)

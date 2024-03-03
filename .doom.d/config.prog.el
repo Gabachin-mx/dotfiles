@@ -1,15 +1,15 @@
 ;;; $DOOMDIR/config.el -*- lexical-binding: t; -*-
 
-(beacon-mode 1)
-
-;; Place your private configuration here! Remember, you do not need to run 'doom
-;; sync' after modifying this file!
-
+;; You do not need to run 'doom sync' after modifying this file!
 
 ;; Some functionality uses this to identify you, e.g. GPG configuration, email
 ;; clients, file templates and snippets. It is optional.
-;; (setq user-full-name "John Doe"
-;;       user-mail-address "john@doe.com")
+(setq user-full-name "Matematleta"
+       user-mail-address "ptoppo@gmail.com")
+
+;; Centaur tabs
+(after! centaur-tabs
+  (setq centaur-tabs-style "wave"))
 
 ;; Doom exposes five (optional) variables for controlling fonts in Doom:
 ;;
@@ -30,17 +30,17 @@
 ;; up, `M-x eval-region' to execute elisp code, and 'M-x doom/reload-font' to
 ;; refresh your font settings. If Emacs still can't find your font, it likely
 ;; wasn't installed correctly. Font issues are rarely Doom issues!
-(setq doom-font (font-spec :family "Hack" :size 16)
-     doom-variable-pitch-font (font-spec :family "Hack" :size 16))
 
-;; There are two ways to load a theme. Both assume the theme is installed and
-;; available. You can either set `doom-theme' or manually load a theme with the
-;; `load-theme' function. This is the default:
-;; (setq doom-theme 'doom-gruvbox)
-;;
-(setq doom-theme 'doom-gruvbox)
-(custom-set-faces
-'(default ((t (:background "#1a1a1a" :foreground "#a9b1d6")))))
+(defun my/pretty-symbols ()
+  (setq prettify-symbols-alist
+          '(("#+begin_src python" . "🐍")
+            ("#+begin_src elisp" . "λ")
+            ("#+begin_src jupyter-python" . "🐍")
+            ("#+end_src" . "―")
+            ("#+results:" . "🔨")
+            ("#+RESULTS:" . "🔨"))))
+
+(global-prettify-symbols-mode +1)
 
 (custom-set-faces!
   '(font-lock-comment-face :slant italic)
@@ -49,6 +49,11 @@
 ;; red is too aggressive, so let's make it orange
   '(doom-modeline-buffer-modified :foreground "orange"))
 
+;; add padding and height to the modeline
+(after! doom-modeline
+  (doom-modeline-def-modeline 'main
+    '(bar workspace-name window-number modals matches follow buffer-info remote-host buffer-position word-count parrot selection-info)
+    '(objed-state misc-info persp-name battery grip irc mu4e gnus github debug repl lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs checker "  ")))
 
 (setq doom-modeline-height 40)
 ;; add the battery status to our modeline.
@@ -58,28 +63,51 @@
                 (string-match-p (regexp-quote "unknown") battery-str)
                 (string-match-p (regexp-quote "N/A") battery-str))
       (display-battery-mode 1))))
-(display-time-mode 1) ; show time and date
-(setq display-time-format "%Y-%m-%d %H:%M") ; time and date format
 
-;; Display mode with letter instead of icon
-(setq doom-modeline-modal-icon nil)
+(setq display-time-format "%I:%M")
+
+
+
+;; There are two ways to load a theme. Both assume the theme is installed and
+;; available. You can either set `doom-theme' or manually load a theme with the
+;; `load-theme' function. 
+(setq doom-theme 'doom-gruvbox)
+
+(setq
+ doom-font (font-spec :family "Iosevka" :size 28)
+ doom-variable-pitch-font (font-spec :family "Libre Baskerville")
+ doom-serif-font (font-spec :family "Libre Baskerville"))
+
+;; Thin grey line separating windows
+(set-face-background 'vertical-border "grey")
+(set-face-foreground 'vertical-border (face-background 'vertical-border))
 
 ;; This determines the style of line numbers in effect. If set to `nil', line
 ;; numbers are disabled. For relative line numbers, set this to `relative'.
 (setq display-line-numbers-type t)
+
+;; Display mode with letter instead of icon
+(setq doom-modeline-modal-icon nil)
 
 ;; If you use `org' and don't want your org files in the default location below,
 ;; change `org-directory'. It must be set before org loads!
 (setq org-directory "~/org/")
 
 ;; force doom to open at dashboard
-;; (setq doom-fallback-buffer-name "*dashboard*")
-;; (setq fancy-splash-image (concat doom-user-dir "splash.png"))
+(setq doom-fallback-buffer-name "*dashboard*")
+(setq fancy-splash-image (concat doom-private-dir "splash.png"))
+;;
+;; set opacity of frames
+(add-to-list 'default-frame-alist '(alpha-background . 80))
 
 ;; backup files
 (setq auto-save-default t
       make-backup-files t)
 
+
+;; Move cursor past last character with S-$
+(setq evil-move-beyond-eol t)
+;;
 ;; Show status bar always
 ;;(after! core-ui (menu-bar-mode 1))
 (menu-bar-mode 1)
@@ -87,50 +115,16 @@
 ;; enable toolbar
 (tool-bar-mode  1)
 
-;; Move cursor past last character with S-$
-(setq evil-move-beyond-eol t)
-
-
-;; Whenever you reconfigure a package, make sure to wrap your config in an
-;; `after!' block, otherwise Doom's defaults may override your settings. E.g.
-;;
-;;   (after! PACKAGE
-;;     (setq x y))
-;;
-;; The exceptions to this rule:
-;;
-;;   - Setting file/directory variables (like `org-directory')
-;;   - Setting variables which explicitly tell you to set them before their
-;;     package is loaded (see 'C-h v VARIABLE' to look up their documentation).
-;;   - Setting doom variables (which start with 'doom-' or '+').
-;;
-;; Here are some additional functions/macros that will help you configure Doom.
-;;
-;; - `load!' for loading external *.el files relative to this one
-;; - `use-package!' for configuring packages
-;; - `after!' for running code after a package has loaded
-;; - `add-load-path!' for adding directories to the `load-path', relative to
-;;   this file. Emacs searches the `load-path' when you load packages with
-;;   `require' or `use-package'.
-;; - `map!' for binding new keys
-;;
-;; To get information about any of these functions/macros, move the cursor over
-;; the highlighted symbol at press 'K' (non-evil users must press 'C-c c k').
-;; This will open documentation for it, including demos of how they are used.
-;; Alternatively, use `C-h o' to look up a symbol (functions, variables, faces,
-;; etc).
-;;
-;; You can also try 'gd' (or 'C-c c d') to jump to their definition and see how
-;; they are implemented.
-
-
+;; Display time
+(display-time-mode 1)
 
 ;; Install pdf-view package
-(use-package pdf-view
+(use-package! pdf-view
   :hook (pdf-tools-enabled . pdf-view-midnight-minor-mode)
   :hook (pdf-tools-enabled . hide-mode-line-mode)
   :config
   (setq pdf-view-midnight-colors '("#ABB2BF" . "#282C35")))
+
 
 (use-package! dired-hide-dotfiles
   :after dired
@@ -161,21 +155,6 @@
    peep-dired-cleanup-on-disable t))
 
 
-;; - `after!' for running code after a package has loaded
-;;
-;; - `add-load-path!' for adding directories to the `load-path', relative to
-;;   this file. Emacs searches the `load-path' when you load packages with
-;;   `require' or `use-package'.
-;; - `map!' for binding new kers
-;;
-;; To get information about any of these functions/macros, move the cursor over
-;; the highlighted symbol at press 'K' (non-evil users must press 'C-c c k').
-;; This will open documentation for it, including demos of how they are used.
-;; Alternatively, use `C-h o' to look up a symbol (functions, variables, faces,
-;; etc).
-;;
-;; You can also try 'gd' (or 'C-c c d') to jump to their definition and see how
-;; they are implemented.
 (defun my-split-vertical ()
     (interactive)
     (split-window-vertically)
@@ -217,11 +196,7 @@
       evil-insert-state-cursor '(bar "medium sea green")
       evil-visual-state-cursor '(hollow "orange"))
 
-;; (setq evil-normal-state-cursor '("dodger blue" box))
-;; (setq evil-visual-state-cursor '("orange" hollow))
-;; (setq evil-insert-state-cursor '("yellow" bar))
-;;
-;;----------------------------------------------------------------------------------------------------
+
 (map! :leader
       (:prefix ("d" . "dired")
        :desc "Open dired" "d" #'dired
@@ -260,7 +235,7 @@
   (kbd "; d") 'epa-dired-do-decrypt
   (kbd "; e") 'epa-dired-do-encrypt)
 
-;;----------------------------------------------------------------------------------------------------
+
 ;; Get file icons in dired
 ;; With dired-open plugin, you can launch external programs for certain extensions
 ;; For example, I set all .png files to open in 'sxiv' and all .mp4 files to open in 'mpv'
@@ -295,7 +270,7 @@
 
 
         (global-set-key (kbd "M-q") #'quit-window)
-        (global-set-key (kbd "M-W") #'save-buffer)
+        (global-set-key (kbd "M-w") #'save-buffer)
 
 ;;----------------------------------------------------------------------------------------------------
 ;; make :q and :wq work the way I like them (thanks ChatGPT)
@@ -350,7 +325,7 @@ _h_ decrease width    _l_ increase width
   ("q" nil))
 
 (map!
-    (:prefix "r"
+    (:prefix "w"
       :desc "Hydra resize" :n "SPC" #'doom-window-resize-hydra/body))
 ;;----------------------------------------------------------------------------------------------------
 ;;default to splitting to the right or to the bottom of the frame. Also, ask me what buffer to use in the newly created window.
@@ -371,39 +346,38 @@ _h_ decrease width    _l_ increase width
 ;; delete the selection when pasting
 (delete-selection-mode 1)
 ;----------------------------------------------------------------------------------------------------;
-;; This changes the icons used for closing a tab and for showing when a buffer has unsaved CHANGES.
+;; This changes the icons used for closing a tab and for showing when a buffer has unsaved changes.
 (setq centaur-tabs-close-button ""
       centaur-tabs-modified-marker ""
       centaur-tabs-set-bar 'over)
-
-(require 'simpleclip)
-(simpleclip-mode 1)
-
-(global-set-key (kbd "C-x x") 'simpleclip-copy)
-(global-set-key (kbd "C-x p") 'simpleclip-paste)
-
- ;; ----- Setting cursor colors
-  (setq evil-emacs-state-cursor    '("#649bce" box))
-  (setq evil-normal-state-cursor   '("#d9a871" box))
-  (setq evil-operator-state-cursor '("#ebcb8b" hollow))
-  (setq evil-visual-state-cursor   '("#677691" box))
-  (setq evil-insert-state-cursor   '("#eb998b" (bar . 2)))
-  (setq evil-replace-state-cursor  '("#eb998b" hbar))
-  (setq evil-motion-state-cursor   '("#ad8beb" box))
-
-;; Change cursor style
-(add-to-list 'default-frame-alist '(cursor-type . bar))
-;; vertical border
-(let ((display-table (or standard-display-table (make-display-table))))
-  (set-display-table-slot display-table 'vertical-border (make-glyph-code ?│)) ; or ┃ │
-  (setq standard-display-table display-table))
-(set-face-background 'vertical-border "#0e0f1b")
-(set-face-foreground 'vertical-border (face-background 'vertical-border))
-
-(setq delete-by-moving-to-trash t
-      trash-directory "~/.local/share/Trash/files/")
-
-
-(map! :leader
-      :desc "Zap to char"    "z" #'zap-to-char
-      :desc "Zap up to char" "Z" #'zap-up-to-char)
+;; Whenever you reconfigure a package, make sure to wrap your config in an
+;; `after!' block, otherwise Doom's defaults may override your settings. E.g.
+;;
+;;   (after! PACKAGE
+;;     (setq x y))
+;;
+;; The exceptions to this rule:
+;;
+;;   - Setting file/directory variables (like `org-directory')
+;;   - Setting variables which explicitly tell you to set them before their
+;;     package is loaded (see 'C-h v VARIABLE' to look up their documentation).
+;;   - Setting doom variables (which start with 'doom-' or '+').
+;;
+;; Here are some additional functions/macros that will help you configure Doom.
+;;
+;; - `load!' for loading external *.el files relative to this one
+;; - `use-package!' for configuring packages
+;; - `after!' for running code after a package has loaded
+;; - `add-load-path!' for adding directories to the `load-path', relative to
+;;   this file. Emacs searches the `load-path' when you load packages with
+;;   `require' or `use-package'.
+;; - `map!' for binding new keys
+;;
+;; To get information about any of these functions/macros, move the cursor over
+;; the highlighted symbol at press 'K' (non-evil users must press 'C-c c k').
+;; This will open documentation for it, including demos of how they are used.
+;; Alternatively, use `C-h o' to look up a symbol (functions, variables, faces,
+;; etc).
+;;
+;; You can also try 'gd' (or 'C-c c d') to jump to their definition and see how
+;; they are implemented.
