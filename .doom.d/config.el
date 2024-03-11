@@ -1,10 +1,54 @@
 ;;; $DOOMDIR/config.el -*- lexical-binding: t; -*-
 
-(beacon-mode 1)
-
 ;; Place your private configuration here! Remember, you do not need to run 'doom
 ;; sync' after modifying this file!
+(beacon-mode 1)
+(xclip-mode 1)
+(focus-mode 0)
+(menu-bar-mode -1)
+(scroll-bar-mode 0)
+(tool-bar-mode 0)
 
+(defalias 'yes-or-no-p 'y-or-n-p)
+
+(line-number-mode 1)
+(column-number-mode 1)
+
+(setq inhibit-startup-message t)
+(setq initial-scratch-message nil)
+
+;; disable test is read only
+(defun my-command-error-function (data context caller)
+  "Ignore the buffer-read-only signal; pass the rest to the default handler."
+  (when (not (eq (car data) 'text-read-only))
+    (command-error-default-function data context caller)))
+
+(setq command-error-function #'my-command-error-function)
+
+;; Emacs system customizations go on a separate file
+(setq custom-file (expand-file-name "custom.el" user-emacs-directory))
+
+;; autosave in tmp directory
+(defconst emacs-tmp-dir (expand-file-name (format "emacs%d" (user-uid)) temporary-file-directory))
+(setq backup-directory-alist
+    `((".*" . ,emacs-tmp-dir)))
+(setq auto-save-file-name-transforms
+    `((".*" ,emacs-tmp-dir t)))
+(setq auto-save-list-file-prefix
+    emacs-tmp-dir)
+
+;; no lockfiles
+(setq create-lockfiles nil)
+
+;; Enable auto pairs
+(electric-pair-mode 1)
+
+;; Enable visual-line-mode for word wrap
+(global-visual-line-mode t)
+
+;;Standard indentation & no tabs
+(setq standard-indent 2)
+(setq-default indent-tabs-mode nil)
 
 ;; Some functionality uses this to identify you, e.g. GPG configuration, email
 ;; clients, file templates and snippets. It is optional.
@@ -22,25 +66,29 @@
 ;;
 ;; See 'C-h v doom-font' for documentation and more examples of what they
 ;; accept. For example:
-;;
-;;(setq doom-font (font-spec :family "Fira Code" :size 12 :weight 'semi-light)
-;;      doom-variable-pitch-font (font-spec :family "Fira Sans" :size 13))
-;;
+;
+(setq doom-font (font-spec :family "Fira Code" :size 20 :weight 'semi-light)
+     doom-variable-pitch-font (font-spec :family "Hack" :size 20))
+
 ;; If you or Emacs can't find your font, use 'M-x describe-font' to look them
 ;; up, `M-x eval-region' to execute elisp code, and 'M-x doom/reload-font' to
 ;; refresh your font settings. If Emacs still can't find your font, it likely
 ;; wasn't installed correctly. Font issues are rarely Doom issues!
-(setq doom-font (font-spec :family "Hack" :size 16)
-     doom-variable-pitch-font (font-spec :family "Hack" :size 16))
-
+;;
 ;; There are two ways to load a theme. Both assume the theme is installed and
 ;; available. You can either set `doom-theme' or manually load a theme with the
 ;; `load-theme' function. This is the default:
-;; (setq doom-theme 'doom-gruvbox)
-;;
+
+(setq doom-theme 'doom-one)
+(map! :leader
+      :desc "Load new theme" "h t" #'counsel-load-theme)
+
 (setq doom-theme 'doom-gruvbox)
 (custom-set-faces
 '(default ((t (:background "#1a1a1a" :foreground "#a9b1d6")))))
+
+(setq doom-one-brighter-comments t
+      doom-one-comment-bg nil)
 
 (custom-set-faces!
   '(font-lock-comment-face :slant italic)
@@ -49,6 +97,22 @@
 ;; red is too aggressive, so let's make it orange
   '(doom-modeline-buffer-modified :foreground "orange"))
 
+ ;; opacity
+(set-frame-parameter nil 'alpha-background 95)
+;; (add-to-list 'default-frame-alist '(alpha-background . 76))
+
+ (defun toggle-transparency ()
+   (interactive)
+   (let ((alpha (frame-parameter nil 'alpha)))
+     (set-frame-parameter
+      nil 'alpha
+      (if (eql (cond ((numberp alpha) alpha)
+                     ((numberp (cdr alpha)) (cdr alpha))
+                     ;; Also handle undocumented (<active> <inactive>) form.
+                     ((numberp (cadr alpha)) (cadr alpha)))
+               100)
+          '(75 . 50) '(100 . 100)))))
+ (global-set-key (kbd "C-c t") 'toggle-transparency)
 
 (setq doom-modeline-height 40)
 ;; add the battery status to our modeline.
@@ -61,12 +125,15 @@
 (display-time-mode 1) ; show time and date
 (setq display-time-format "%Y-%m-%d %H:%M") ; time and date format
 
-;; Display mode with letter instead of icon
-(setq doom-modeline-modal-icon nil)
+(setq delete-by-moving-to-trash t
+      trash-directory "~/.local/share/Trash/files/")
 
 ;; This determines the style of line numbers in effect. If set to `nil', line
 ;; numbers are disabled. For relative line numbers, set this to `relative'.
 (setq display-line-numbers-type t)
+
+;; Display mode with letter instead of icon
+(setq doom-modeline-modal-icon nil)
 
 ;; If you use `org' and don't want your org files in the default location below,
 ;; change `org-directory'. It must be set before org loads!
@@ -74,22 +141,29 @@
 
 ;; force doom to open at dashboard
 ;; (setq doom-fallback-buffer-name "*dashboard*")
-;; (setq fancy-splash-image (concat doom-user-dir "splash.png"))
+;; (setq fancy-splash-image "~/.doom.d/themes/true.png")
+;; (setq +doom-dashboard-pwd-policy "~")
+
+
+(setq initial-buffer-choice (lambda () (get-buffer-create "*doom*"))) ;; necessary for emacsclient
+;;
+(setq dashboard-startup-banner "~/.doom.d/themes/true.png")
+
+(after! neotree
+  (setq neo-smart-open t
+        neo-window-fixed-size nil))
+(after! doom-themes
+  (setq doom-neotree-enable-variable-pitch t))
+(map! :leader
+      :desc "Toggle neotree file viewer" "t n" #'neotree-toggle
+      :desc "Open directory in neotree"  "d n" #'neotree-dir)
+
+;; set opacity of frames
+(add-to-list 'default-frame-alist '(alpha-background . 95))
 
 ;; backup files
 (setq auto-save-default t
       make-backup-files t)
-
-;; Show status bar always
-;;(after! core-ui (menu-bar-mode 1))
-(menu-bar-mode 1)
-
-;; enable toolbar
-(tool-bar-mode  1)
-
-;; Move cursor past last character with S-$
-(setq evil-move-beyond-eol t)
-
 
 ;; Whenever you reconfigure a package, make sure to wrap your config in an
 ;; `after!' block, otherwise Doom's defaults may override your settings. E.g.
@@ -97,7 +171,17 @@
 ;;   (after! PACKAGE
 ;;     (setq x y))
 ;;
-;; The exceptions to this rule:
+;; Move cursor past last character with S-$
+(setq evil-move-beyond-eol t)
+;;
+;;
+(map! :leader
+      (:prefix ("c h" . "Help info from Clippy")
+       :desc "Clippy describes function under point" "f" #'clippy-describe-function
+       :desc "Clippy describes variable under point" "v" #'clippy-describe-variable))
+;;
+;;
+;; The exceptions to this rule:
 ;;
 ;;   - Setting file/directory variables (like `org-directory')
 ;;   - Setting variables which explicitly tell you to set them before their
@@ -108,24 +192,13 @@
 ;;
 ;; - `load!' for loading external *.el files relative to this one
 ;; - `use-package!' for configuring packages
-;; - `after!' for running code after a package has loaded
-;; - `add-load-path!' for adding directories to the `load-path', relative to
-;;   this file. Emacs searches the `load-path' when you load packages with
-;;   `require' or `use-package'.
-;; - `map!' for binding new keys
 ;;
-;; To get information about any of these functions/macros, move the cursor over
-;; the highlighted symbol at press 'K' (non-evil users must press 'C-c c k').
-;; This will open documentation for it, including demos of how they are used.
-;; Alternatively, use `C-h o' to look up a symbol (functions, variables, faces,
-;; etc).
-;;
-;; You can also try 'gd' (or 'C-c c d') to jump to their definition and see how
-;; they are implemented.
+(use-package dired-subtree :ensure t
+  :after dired
+  :config
+  (bind-key "<tab>" #'dired-subtree-toggle dired-mode-map)
+  (bind-key "<backtab>" #'dired-subtree-cycle dired-mode-map))
 
-
-
-;; Install pdf-view package
 (use-package pdf-view
   :hook (pdf-tools-enabled . pdf-view-midnight-minor-mode)
   :hook (pdf-tools-enabled . hide-mode-line-mode)
@@ -205,23 +278,79 @@
 (key-chord-mode 1)
 
 ;; ;; change cursor color and shape, depending on the mode
-;;
-(unless (display-graphic-p)
-          (require 'evil-terminal-cursor-changer)
-          
-          (evil-terminal-cursor-changer-activate) ; or (etcc-on)
-          )
 
-(setq evil-default-cursor t) ;; Now evil takes the default cursors 
-(setq evil-normal-state-cursor '(box "light blue")
+(setq evil-normal-state-cursor '(box "dodger blue")
       evil-insert-state-cursor '(bar "medium sea green")
       evil-visual-state-cursor '(hollow "orange"))
 
-;; (setq evil-normal-state-cursor '("dodger blue" box))
-;; (setq evil-visual-state-cursor '("orange" hollow))
-;; (setq evil-insert-state-cursor '("yellow" bar))
-;;
-;;----------------------------------------------------------------------------------------------------
+(use-package evil-terminal-cursor-changer
+:ensure t
+:init
+(setq evil-motion-state-cursor 'box)  ; █
+;; (setq evil-visual-state-cursor 'box)  ; █
+;; (setq evil-normal-state-cursor 'box)  ; █
+;; (setq evil-insert-state-cursor 'bar)  ; ⎸
+(setq evil-emacs-state-cursor  'hbar) ; _
+:config
+(evil-terminal-cursor-changer-activate))
+
+; make ESC quit everything
+(defun minibuffer-keyboard-quit ()
+(interactive)
+(if (and delete-selection-mode transient-mark-mode mark-active)
+    (setq deactivate-mark  t)
+(when (get-buffer "*Completions*") (delete-windows-on "*Completions*"))
+(abort-recursive-edit)))
+
+(define-key evil-visual-state-map [escape] 'keyboard-quit)
+(define-key minibuffer-local-map [escape] 'minibuffer-keyboard-quit)
+(define-key minibuffer-local-ns-map [escape] 'minibuffer-keyboard-quit)
+(define-key minibuffer-local-completion-map [escape] 'minibuffer-keyboard-quit)
+(define-key minibuffer-local-must-match-map [escape] 'minibuffer-keyboard-quit)
+(define-key minibuffer-local-isearch-map [escape] 'minibuffer-keyboard-quit)
+
+;; autoconplete
+(use-package company
+  :ensure t
+  :config
+  (global-company-mode t)
+  (setq company-global-modes '(not org-mode)))
+
+(define-key company-mode-map (kbd "TAB") 'company-complete)
+
+(use-package emojify
+  :ensure t
+  :init
+    (add-hook 'after-init-hook #'global-emojify-mode)
+    (setq emojify-display-style 'unicode))
+
+(use-package yaml-mode :ensure t)
+
+;; Type script
+(use-package tide
+  :ensure t)
+
+(defun setup-tide-mode ()
+  (interactive)
+  (tide-setup)
+  (flycheck-mode +1)
+  (setq flycheck-check-syntax-automatically '(save mode-enabled))
+  (eldoc-mode +1)
+  (tide-hl-identifier-mode +1)
+  ;; company is an optional dependency. You have to
+  ;; install it separately via package-install
+  ;; `M-x package-install [ret] company`
+  (company-mode +1))
+
+;; aligns annotation to the right hand side
+(setq company-tooltip-align-annotations t)
+
+(setq tide-tsserver-executable "node_modules/.bin/tsserver")
+
+(add-hook 'web-mode-hook #'setup-tide-mode)
+
+
+
 (map! :leader
       (:prefix ("d" . "dired")
        :desc "Open dired" "d" #'dired
@@ -259,24 +388,27 @@
   (kbd "* /") 'dired-mark-directories
   (kbd "; d") 'epa-dired-do-decrypt
   (kbd "; e") 'epa-dired-do-encrypt)
-
-;;----------------------------------------------------------------------------------------------------
 ;; Get file icons in dired
 ;; With dired-open plugin, you can launch external programs for certain extensions
-;; For example, I set all .png files to open in 'sxiv' and all .mp4 files to open in 'mpv'
+;; For example, I setrall .png files to open in 'sxiv' and all .mp4 files to open in 'mpv'
 (setq dired-open-extensions '(("gif" . "sxiv")
                               ("jpg" . "sxiv")
                               ("png" . "sxiv")
                               ("mkv" . "mpv")
                               ("mp4" . "mpv")))
-;; moving lines up and down plugin
+(evil-define-key 'normal peep-dired-mode-map
+  (kbd "j") 'peep-dired-next-file
+  (kbd "k") 'peep-dired-prev-file)
+(add-hook 'peep-dired-hook 'evil-normalize-keymaps)
+
+;; movig lines up and down plugin
 (drag-stuff-global-mode 1)
 ;; To activate the suggested key-bindings, <M-up>, <M-down>, <M-right>, <M-left>, use:
 (drag-stuff-define-keys)
 
 (setq doom-themes-treemacs-theme "doom-colors")
 
-;;----------------------------------------------------------------------------------------------------
+
     (defun kill-dired-buffers ()
 	 (interactive)
 	 (mapc (lambda (buffer)
@@ -294,10 +426,10 @@
    :desc "kill-non-dired-buffers"      "K" #'kill-other-buffers)
 
 
-        (global-set-key (kbd "M-q") #'quit-window)
+        (global-set-key (kbd "M-Q") #'quit-window)
         (global-set-key (kbd "M-W") #'save-buffer)
 
-;;----------------------------------------------------------------------------------------------------
+
 ;; make :q and :wq work the way I like them (thanks ChatGPT)
 (defun my-kill-buffer-or-window ()
   "Kill the buffer, or close the window if there's only one.
@@ -325,15 +457,17 @@
 
 (evil-ex-define-cmd "wq" 'evil-save-and-close)
 
-;;----------------------------------------------------------------------------------------------------
 (map! :leader
       :desc " save "      "w w" #'save-buffer)
 
 (map! :leader
       :desc " save and quit "      "w q" #'save-buffers-kill-emacs)
-;----------------------------------------------------------------------------------------------------;
+
 (define-key evil-normal-state-map (kbd "RET") 'newline)
-;;---------------------------------------------------------------------------------------------------
+
+(map! :leader
+      :desc "Zap to char"    "z" #'zap-to-char
+      :desc "Zap up to char" "Z" #'zap-up-to-char)
 ;; Resize windows (requires hydra package)
 ;;
 (defhydra doom-window-resize-hydra (:hint nil)
@@ -350,60 +484,203 @@ _h_ decrease width    _l_ increase width
   ("q" nil))
 
 (map!
-    (:prefix "r"
+    (:prefix ";"
       :desc "Hydra resize" :n "SPC" #'doom-window-resize-hydra/body))
-;;----------------------------------------------------------------------------------------------------
-;;default to splitting to the right or to the bottom of the frame. Also, ask me what buffer to use in the newly created window.
-;; do the splits
-(setq evil-vsplit-window-right t
-      evil-split-window-below t)
+;;--------------------------------------------------------------------------
 
-(defadvice! prompt-for-buffer (&rest _)
-  :after '(evil-window-split evil-window-vsplit)
-  (consult-buffer))
-;;----------------------------------------------------------------------------------------------------;
-;; I like prompt prompts
-(setq company-minimum-prefix-length 1)
-(setq company-idle-delay 0.0)
-(setq company-tooltip-align-annotations t)
-(setq company-selection-wrap-around t)
-;---------------------------------------------------------------------------------------------------
-;; delete the selection when pasting
-(delete-selection-mode 1)
-;----------------------------------------------------------------------------------------------------;
-;; This changes the icons used for closing a tab and for showing when a buffer has unsaved CHANGES.
-(setq centaur-tabs-close-button ""
-      centaur-tabs-modified-marker ""
-      centaur-tabs-set-bar 'over)
+(use-package! openwith
+  :after-call pre-command-hook
+  :config
+  (openwith-mode t)
+  (add-to-list 'openwith-associations '("\\.pdf\\'" "qpdfview" (file)))
+  (add-to-list 'openwith-associations '("\\.xls\\'" "libreoffice --calc" (file)))
+  (add-to-list 'openwith-associations '("\\.xls\\'" "libreoffice --calc" (file)))
+  (add-to-list 'openwith-associations '("\\.doc\\'" "libreoffice --writer" (file)))
+  (add-to-list 'openwith-associations '("\\.docx\\'" "libreoffice --writer" (file))))
 
-(require 'simpleclip)
-(simpleclip-mode 1)
+(use-package nix-mode
+  :mode "\\.nix\\'")
 
-(global-set-key (kbd "C-x x") 'simpleclip-copy)
-(global-set-key (kbd "C-x p") 'simpleclip-paste)
+;; Auto save buffers on focus lost
+(add-function :after after-focus-change-function (lambda () (save-some-buffers t)))
+;; Exit insert mode on focus loss
+(add-function :after after-focus-change-function (lambda () (evil-normal-state)))
 
- ;; ----- Setting cursor colors
-  (setq evil-emacs-state-cursor    '("#649bce" box))
-  (setq evil-normal-state-cursor   '("#d9a871" box))
-  (setq evil-operator-state-cursor '("#ebcb8b" hollow))
-  (setq evil-visual-state-cursor   '("#677691" box))
-  (setq evil-insert-state-cursor   '("#eb998b" (bar . 2)))
-  (setq evil-replace-state-cursor  '("#eb998b" hbar))
-  (setq evil-motion-state-cursor   '("#ad8beb" box))
+(use-package! tree-sitter
+  :config
+  (require 'tree-sitter-langs)
+  (global-tree-sitter-mode)
+  (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode))
 
-;; Change cursor style
-(add-to-list 'default-frame-alist '(cursor-type . bar))
-;; vertical border
-(let ((display-table (or standard-display-table (make-display-table))))
-  (set-display-table-slot display-table 'vertical-border (make-glyph-code ?│)) ; or ┃ │
-  (setq standard-display-table display-table))
-(set-face-background 'vertical-border "#0e0f1b")
-(set-face-foreground 'vertical-border (face-background 'vertical-border))
+;; ;; make unmatched parens stand out more with a strikethrough.
+;; (set-face-attribute 'rainbow-delimiters-unmatched-face nil
+;;                     :foreground 'unspecified
+;;                     :inherit 'show-paren-mismatch
+;;                     :strike-through t)
 
-(setq delete-by-moving-to-trash t
-      trash-directory "~/.local/share/Trash/files/")
+;; (add-hook 'emacs-lisp-mode-hook 'rainbow-delimiters-mode)
+;; (add-hook 'lisp-mode-hook 'rainbow-delimiters-mode)
+;; (add-hook 'scheme-mode-hook 'rainbow-delimiters-mode)
+;; (add-hook 'c-mode-common-hook 'rainbow-delimiters-mode)
 
+;; ;; Insert closing parens automagically
+(use-package elec-pair
+  :demand
+  :config
+  (electric-pair-mode 1))
 
-(map! :leader
-      :desc "Zap to char"    "z" #'zap-to-char
-      :desc "Zap up to char" "Z" #'zap-up-to-char)
+;; open file as root
+(defun do.minimal.misc/sudo-open ()
+  "Like `find-file', but with root rights using TRAMP"
+  (interactive)
+  (let ((file (read-file-name "Open as root: ")))
+    (unless (file-writable-p file)
+      (find-file (concat "/sudo:root@localhost:" file)))))
+;; bind to a key
+(global-set-key (kbd "C-x F") #'do.minimal.misc/sudo-open)
+
+    (use-package! xclip
+        :config
+        (setq xclip-program "wl-copy")
+        (setq xclip-select-enable-clipboard t)
+        (setq xclip-mode t)
+        (setq xclip-method (quote wl-copy)))
+
+;; don't put deleted strings to X11 clipboard
+(setq select-enable-clipboard nil)
+
+(add-to-list 'load-path "~/.doom.d/lisp")
+
+;; (use-package welcome-dashboard
+;;   :ensure nil ;; when using local file and not straight nor use-package
+;;   :config
+;;   (setq welcome-dashboard-latitude 56.7365
+;;         welcome-dashboard-longitude 16.2981 ;; latitude and longitude must be set to show weather information
+;;         welcome-dashboard-use-nerd-icons t ;; Use nerd icons instead of all-the-icons
+;;         welcome-dashboard-path-max-length 75
+;;         welcome-dashboard-use-fahrenheit nil ;; show in celcius or fahrenheit.
+;;         welcome-dashboard-min-left-padding 10
+;;         welcome-dashboard-image-file "~/.doom.d/themes/true.png"
+;;         welcome-dashboard-image-width 200
+;;         welcome-dashboard-image-height 169
+;;         welcome-dashboard-title "Hey Paulie")
+;;   (welcome-dashboard-create-welcome-hook))
+
+;; use-package with package.el:
+(use-package dashboard
+  :ensure t
+  :config
+  (dashboard-setup-startup-hook))
+
+(setq initial-buffer-choice (lambda () (get-buffer-create "*dashboard*")))
+
+;; Set the title
+(setq dashboard-banner-logo-title "Hey Paulie")
+;; Set the banner
+(setq dashboard-startup-banner "~/.doom.d/themes/true.png")
+;; Value can be
+;; - nil to display no banner
+;; - 'official which displays the official emacs logo
+;; - 'logo which displays an alternative emacs logo
+;; - 1, 2 or 3 which displays one of the text banners
+;; - "path/to/your/image.gif", "path/to/your/image.png", "path/to/your/text.txt" or "path/to/your/image.xbm" which displays whatever gif/image/text/xbm you would prefer
+;; - a cons of '("path/to/your/image.png" . "path/to/your/text.txt")
+
+;; Content is not centered by default. To center, set
+(setq dashboard-center-content t)
+;; vertically center content
+(setq dashboard-vertically-center-content t)
+
+;; To disable shortcut "jump" indicators for each section, set
+(setq dashboard-show-shortcuts nil)
+
+(setq dashboard-items '((recents   . 5)
+                        (bookmarks . 5)
+                        (projects  . 5)
+                        (agenda    . 5)
+                        (registers . 5)))
+
+;; Enable vertico
+(use-package vertico
+  :init
+  (vertico-mode)
+
+  ;; Different scroll margin
+  ;; (setq vertico-scroll-margin 0)
+
+  ;; Show more candidates
+  ;; (setq vertico-count 20)
+
+  ;; Grow and shrink the Vertico minibuffer
+  ;; (setq vertico-resize t)
+
+  ;; Optionally enable cycling for `vertico-next' and `vertico-previous'.
+  ;; (setq vertico-cycle t)
+  )
+
+;; Persist history over Emacs restarts. Vertico sorts by history position.
+(use-package savehist
+  :init
+  (savehist-mode))
+
+;; A few more useful configurations...
+(use-package emacs
+  :init
+  ;; Add prompt indicator to `completing-read-multiple'.
+  ;; We display [CRM<separator>], e.g., [CRM,] if the separator is a comma.
+  (defun crm-indicator (args)
+    (cons (format "[CRM%s] %s"
+                  (replace-regexp-in-string
+                   "\\`\\[.*?]\\*\\|\\[.*?]\\*\\'" ""
+                   crm-separator)
+                  (car args))
+          (cdr args)))
+  (advice-add #'completing-read-multiple :filter-args #'crm-indicator)
+
+  ;; Do not allow the cursor in the minibuffer prompt
+  (setq minibuffer-prompt-properties
+        '(read-only t cursor-intangible t face minibuffer-prompt))
+  (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
+
+  ;; Emacs 28: Hide commands in M-x which do not work in the current mode.
+  ;; Vertico commands are hidden in normal buffers.
+  ;; (setq read-extended-command-predicate
+  ;;       #'command-completion-default-include-p)
+
+  ;; Enable recursive minibuffers
+  (setq enable-recursive-minibuffers t))
+
+;; Optionally use the `orderless' completion style.
+(use-package orderless
+  :init
+  ;; Configure a custom style dispatcher (see the Consult wiki)
+  ;; (setq orderless-style-dispatchers '(+orderless-consult-dispatch orderless-affix-dispatch)
+  ;;       orderless-component-separator #'orderless-escapable-split-on-space)
+  (setq completion-styles '(orderless basic)
+        completion-category-defaults nil
+        completion-category-overrides '((file (styles partial-completion)))))
+
+;; use `consult-completion-in-region' if vertico is enabled.
+;; Otherwise use the default `completion--in-region' function.
+(setq completion-in-region-function
+      (lambda (&rest args)
+        (apply (if vertico-mode
+                   #'consult-completion-in-region
+                 #'completion--in-region)
+               args)))
+
+;; Enable rich annotations using the Marginalia package
+(use-package marginalia
+  ;; Bind `marginalia-cycle' locally in the minibuffer.  To make the binding
+  ;; available in the *Completions* buffer, add it to the
+  ;; `completion-list-mode-map'.
+  :bind (:map minibuffer-local-map
+         ("M-A" . marginalia-cycle))
+
+  ;; The :init section is always executed.
+  :init
+
+  ;; Marginalia must be activated in the :init section of use-package such that
+  ;; the mode gets enabled right away. Note that this forces loading the
+  ;; package.
+  (marginalia-mode))
