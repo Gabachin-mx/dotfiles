@@ -1,3 +1,4 @@
+
 "Use Vundle plugin manager
 
 set nocompatible             
@@ -26,6 +27,7 @@ Plugin 'tpope/vim-surround'
 Plugin 'voldikss/vim-floaterm'
 Plugin 'sheerun/vim-polyglot'
 Plugin 'junegunn/rainbow_parentheses.vim'
+Plugin 'kshenoy/vim-signature'
 call vundle#end()            
 
 filetype plugin indent on 
@@ -33,6 +35,8 @@ filetype plugin indent on
 colorscheme torte
 
 set bg=dark
+" transparent bg
+" autocmd vimenter * hi Normal guibg=NONE ctermbg=NONE
 
 " Enable CursorLine
 set cursorline
@@ -55,8 +59,8 @@ let g:airline_section_c = '%<%F%m %#__accent_red#%{airline#util#wrap(airline#par
 " Copy paste to external programs (requires gvim)
 set clipboard=unnamed
 
-nnoremap <C-y> "+y
-vnoremap <C-y> "+y
+nnoremap <C-x> "+y
+vnoremap <C-x> "+y
 nnoremap <C-p> "+gP
 vnoremap <C-p> "+gP
 "
@@ -100,13 +104,14 @@ nnoremap :: :bp\|bd #<CR>
  " (useful for handling the permission-denied error)
  command! W execute 'w !sudo tee % > /dev/null' <bar> edit!
  
- " Set 7 lines to the cursor - when moving vertically using j/k
-set so=7
+ " Set n lines to the cursor from the top
+set so=0
  
 "switch between buffers in normal mode
 map gn :bnext<cr>
 map gp :bprevious<cr>
 map gd :bdelete<cr>  
+map ge :enew<cr>  
 
 " I personally use <leader> 
 " map <leader>n :bnext<cr>
@@ -189,17 +194,20 @@ set hidden
 " Note that not everyone likes working this way (with the hidden option).
 " Alternatives include using tabs or split windows instead of re-using the same
 " window as mentioned above, and/or either of the following options:
-" set confirm
+set confirm
 " set autowriteall
 "
-" vv to generate vertical split of the file
+" vf to generate vertical split of the file
 nnoremap <silent>vf <C-w>v
 
+" vh to generate vertical split of the file
+nnoremap <silent>vh <C-w>h
+
 " vn to generate horizontal split create NEW file
-nnoremap <silent>hn <C-w>n
+nnoremap <leader>h <C-w>n
 
 " vn to generate vertical split create NEW file
-nnoremap <leader>vn :vnew<CR> 
+nnoremap <leader>v :vnew<CR> 
 
 " make files modifiable
 set ma
@@ -362,10 +370,11 @@ vnoremap <A-u> :m '<-2<CR>gv=gv
 "<A-h>   Move current character/selection left
 "<A-l>   Move current character/selection right
 "The mappings can be prefixed with a count, e.g. 5<A-k> will move the selection up by 5 lines.
-"
 
-
+" Insert character
+:noremap <leader> i <Esc>r
 "select all contents of file
+"
 nnoremap <C-A> ggVG
 "------------------------------------------------------------
 
@@ -396,6 +405,7 @@ map <leader>cd :cd %:p:h<cr>:pwd<cr>
 " Specify the behavior when switching between buffers
 try
   set switchbuf=useopen,usetab,newtab
+
   set stal=2
 catch
 endtry
@@ -551,11 +561,25 @@ inoremap ` ``<Esc>ha
 
 " Use vifm with Floaterm plugin
 let g:floaterm_opener = 'edit'
-vnoremap <leader>m :FloatermNew --autoclose=2 vifm<CR>
-nnoremap <leader>m :FloatermNew --autoclose=2 vifm<CR>
+vnoremap <leader>M :FloatermNew --autoclose=2 vifm<CR>
+nnoremap <leader>M :FloatermNew --autoclose=2 vifm<CR>
+
+" Launch terminal (like a scratchpad)
+vnoremap <leader>m :FloatermNew<CR>
+nnoremap <leader>m :FloatermNew<CR>
 
 " Activate Rainbow parenthesis
 nnoremap <leader>p :RainbowParentheses<CR>
 vnoremap <leader>p :RainbowParentheses<CR>
 
-
+let t:is_transparent = 0                     
+function! Toggle_transparent_background()                      
+  if t:is_transparent == 0                   
+    hi Normal guibg=#111111 ctermbg=black                     
+    let t:is_transparent = 1
+  else
+    hi Normal guibg=NONE ctermbg=NONE                    
+    let t:is_transparent = 0                        
+  endif                    
+endfunction               
+nnoremap <C-x><C-t> :call Toggle_transparent_background()<CR>
